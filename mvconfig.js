@@ -48,7 +48,7 @@ window.MVCONFIG = {
      enabled = その項目の表示切替。書かない or true で表示、false で画面から隠す（一時的な非表示に便利）。 */
   options: {
     diff: { enabled:true,  label:'イラスト 差分あり',  add:2000,  sub:'' },
-    sway: { enabled:true, label:'髪・衣装の揺れ',      add:5000, sub:'イラストのレイヤ・パーツ分けが必要になります。' },
+    sway: { enabled:true, label:'髪・衣装の揺れ',      add:5000, sub:'イラストのレイヤー・パーツ分けが必要になります。' },
     cg:   { enabled:false, label:'3D・CGの使用',        add:8000, sub:'' },
   },
 

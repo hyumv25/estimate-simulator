@@ -398,10 +398,34 @@ select{background:var(--panel);color:var(--text);border:1px solid var(--line2);b
 
   // ---- 結果リンク（ハッシュ）----
   function buildHash(){
-    var checkedOpts = OPTS.filter(function(o){return state.opts[o.id];}).map(function(o){return o.id;}).join(",");
-    var checkedDisc = DISC.filter(function(d){return state.disc[d.id];}).map(function(d){return d.id;}).join(",");
-    var p = new URLSearchParams({ mn:state.min, sc:state.sec, il:state.illust, o:checkedOpts, dl:state.delivery, dc:checkedDisc });
-    return p.toString();
+
+  // オプションをビット化
+  var opt = 0;
+  if(state.opts.diff) opt |= 1;
+  if(state.opts.sway) opt |= 2;
+  if(state.opts.cg) opt |= 4;
+  if(state.opts.commercial) opt |= 8;
+
+  // 納期
+  var dl = 0;
+  if(state.delivery==="express") dl=1;
+  else if(state.delivery==="super") dl=2;
+
+  // 割引
+  var disc = 0;
+  if(state.disc.repeat) disc |= 1;
+  if(state.disc.referral) disc |= 2;
+
+  // 秒は 0～5 に変換
+  var sec = state.sec / 10;
+
+  return ""
+    + state.min
+    + sec
+    + state.illust
+    + opt
+    + dl
+    + disc;
   }
   function shareUrl(){ return location.href.split("#")[0] + "#" + buildHash(); }
 
@@ -418,13 +442,7 @@ select{background:var(--panel);color:var(--text);border:1px solid var(--line2);b
     return lines.join('\n');
   }
   function copyText(){
-    var r = collapse(calc());
-    var heading = C.formCopyHeading || '【MV制作 概算見積り】';
-    return heading + '\n'
-      + buildSummary(r) + '\n'
-      + '──────────\n'
-      + '▼条件再現リンク（開くと見積り条件が復元されます）\n'
-      + shareUrl();
+  return shareUrl();
   }
 
   function updateLinks(r){
@@ -435,14 +453,44 @@ select{background:var(--panel);color:var(--text);border:1px solid var(--line2);b
 
   // ---- ハッシュ復元 ----
   function restore(){
+
     if(!location.hash) return;
-    var p=new URLSearchParams(location.hash.slice(1));
-    if(p.has("mn")) state.min=Math.max(0, parseInt(p.get("mn"))||0);
-    if(p.has("sc")){ var sc=parseInt(p.get("sc"))||0; sc=Math.round(sc/10)*10; state.sec=Math.min(50,Math.max(0,sc)); }
-    if(p.has("il")) state.illust=Math.max(C.includedIllust||1, parseInt(p.get("il"))||1);
-    if(p.has("o")){ var set=(p.get("o")||"").split(","); OPTS.forEach(function(o){ state.opts[o.id]=set.indexOf(o.id)>=0; }); }
-    if(p.has("dl") && C.delivery.some(function(d){return d.id===p.get("dl");})) state.delivery=p.get("dl");
-    if(p.has("dc")){ var ds=(p.get("dc")||"").split(","); DISC.forEach(function(d){ state.disc[d.id]=ds.indexOf(d.id)>=0; }); }
+
+    var h = location.hash.slice(1);
+
+    if(h.length < 6) return;
+
+    state.min = parseInt(h[0]);
+    state.sec = parseInt(h[1]) * 10;
+    state.illust = parseInt(h[2]);
+
+    var opt = parseInt(h[3]);
+
+    state.opts.diff = !!(opt & 1);
+    state.opts.sway = !!(opt & 2);
+
+    if("cg" in state.opts)
+        state.opts.cg = !!(opt & 4);
+
+    if("commercial" in state.opts)
+        state.opts.commercial = !!(opt & 8);
+
+    switch(parseInt(h[4])){
+        case 1:
+            state.delivery="express";
+            break;
+        case 2:
+            state.delivery="super";
+            break;
+        default:
+            state.delivery="normal";
+    }
+
+    var disc=parseInt(h[5]);
+
+    state.disc.repeat=!!(disc&1);
+    state.disc.referral=!!(disc&2);
+
   }
   function syncUI(){
     $("#minVal").value=state.min;
@@ -498,7 +546,7 @@ select{background:var(--panel);color:var(--text);border:1px solid var(--line2);b
     var note=$("#shareNote"); if(!note) return;
     note.classList.add('done');
     $("#shareNoteText").innerHTML = '<span class="em">見積り内容をコピーしました。</span>'
-      + (C.formDoneHint ? esc(C.formDoneHint).replace('見積り内容をコピーしました。','') : '開いたフォームの「見積り結果」欄に貼り付け（Cmd / Ctrl + V）してください。');
+      + (C.formDoneHint ? esc(C.formDoneHint).replace('見積り内容をコピーしました。','') : '開いたフォームの「見積り結果」欄に貼り付けてください。');
   }
 
   restore();
