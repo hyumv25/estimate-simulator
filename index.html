@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hyu - 見積りシミュレーター</title>
+<meta name="description" content="イラストMV制作の概算をその場でシミュレーションできます。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f7f6f3; --panel:#ffffff; --panel2:#f4f2ee; --line:rgba(55,53,47,0.10); --line2:rgba(55,53,47,0.16);
+  --text:#37352f; --muted:#9b9a97; --muted2:#787774; --accent:#787066; --accent-tint:rgba(120,112,102,0.08);
+  --ok:#3f7a5c; --radius:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif;line-height:1.7;-webkit-font-smoothing:antialiased}
+.wrap{max-width:680px;margin:0 auto;padding:32px 18px 150px}
+.layout{display:block}
+.left{display:block}
+header{padding:8px 4px 6px}
+header h1{font-size:24px;font-weight:700;letter-spacing:.01em;line-height:1.4}
+header p{color:var(--muted2);font-size:13.5px;margin-top:10px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;margin-top:16px;box-shadow:0 1px 3px rgba(55,53,47,0.04)}
+.card h2{font-size:12px;color:var(--muted);letter-spacing:.06em;margin-bottom:16px;font-weight:600}
+.card h2 .n{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:6px;background:var(--accent-tint);color:var(--accent);font-size:11px;font-weight:700;margin-right:8px;vertical-align:middle}
+.fieldnote{font-size:12px;color:var(--muted);margin-top:12px;line-height:1.6}
+/* 尺 */
+.durrow{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.durunit{display:flex;align-items:center;gap:9px}
+.durunit .u{font-size:13px;color:var(--muted2)}
+.durval{font-variant-numeric:tabular-nums;min-width:34px;text-align:center;font-weight:700;font-size:17px}
+select{background:var(--panel);color:var(--text);border:1px solid var(--line2);border-radius:9px;padding:9px 30px 9px 12px;font-size:15px;font-family:inherit;cursor:pointer;
+  -webkit-appearance:none;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23787774' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center}
+.stepper{display:flex;align-items:center;border:1px solid var(--line2);border-radius:9px;overflow:hidden;background:var(--panel)}
+.stepper button{width:38px;height:38px;background:var(--panel);color:var(--text);border:none;font-size:18px;cursor:pointer;line-height:1;transition:.12s}
+.stepper button:hover{background:var(--panel2)}
+.stepper button:active{background:var(--accent);color:#fff}
+.stepper input{width:46px;height:38px;text-align:center;background:var(--panel);color:var(--text);border:none;border-left:1px solid var(--line);border-right:1px solid var(--line);font-size:16px;font-weight:600;font-variant-numeric:tabular-nums}
+.durtotal{margin-left:auto;font-variant-numeric:tabular-nums;font-weight:700;font-size:16px;color:var(--accent)}
+/* オプション行 */
+.opt{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 0;border-top:1px solid var(--line);cursor:pointer}
+.opt:first-of-type{border-top:none}
+#optList{border-top:1px solid var(--line);margin-top:2px}
+.opt .txt{min-width:0}
+.opt .lbl{font-size:14.5px}
+.opt .sub{font-size:12px;color:var(--muted);margin-top:3px}
+.opt input[type=checkbox]{-webkit-appearance:none;appearance:none;width:22px;height:22px;border:1.5px solid var(--line2);border-radius:6px;background:var(--panel);cursor:pointer;flex:none;transition:background-color .1s linear,border-color .1s linear;position:relative}
+.opt input[type=checkbox]:checked{background:var(--accent);border-color:var(--accent);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'%3E%3Cpath d='M2.5 7.5l3 3 6-6.5' stroke='white' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:center}
+/* 割引トグル */
+.switch{position:relative;display:inline-block;width:44px;height:26px;flex:none}
+.switch input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer;z-index:1}
+.switch .knob{position:absolute;inset:0;background:var(--line2);border-radius:14px;transition:background .15s}
+.switch .knob::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;background:#fff;border-radius:50%;box-shadow:0 1px 2px rgba(0,0,0,0.22);transition:transform .15s}
+.switch input:checked ~ .knob{background:var(--accent)}
+.switch input:checked ~ .knob::after{transform:translateX(18px)}
+/* 納期 */
+.deadline{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px}
+.dl{cursor:pointer;text-align:center;border:1px solid var(--line2);border-radius:11px;padding:13px 6px;background:var(--panel);transition:.15s}
+.dl:hover{border-color:var(--accent)}
+.dl input{display:none}
+.dl .t{font-weight:600;font-size:14px}
+.dl .s{font-size:11px;color:var(--muted);margin-top:3px}
+.dl.sel{border-color:var(--accent);background:var(--accent-tint)}
+.dl.sel .t{color:var(--accent)}
+/* 結果 */
+.result{position:sticky;bottom:16px;margin-top:20px}
+
+/* ── PC: 概算を右カラムに固定追従 ── */
+@media (min-width:900px){
+  .wrap{max-width:1080px}
+  .layout{display:grid;grid-template-columns:1fr 380px;gap:26px;align-items:start}
+  .right{align-self:start}
+  .result{position:sticky;top:24px;bottom:auto;margin-top:16px}
+  .right .actions{flex-direction:column}
+  .right .btn{min-width:0}
+  .right .total .amt small{display:block;margin-left:0;margin-top:2px}
+}
+.total{background:var(--panel);border:1px solid var(--line2);border-radius:var(--radius);padding:20px 22px;box-shadow:0 6px 28px rgba(55,53,47,0.10)}
+.total .lab{font-size:12px;color:var(--muted);letter-spacing:.05em}
+.total .amt{font-size:30px;font-weight:700;letter-spacing:.005em;font-variant-numeric:tabular-nums;margin-top:3px;line-height:1.25}
+.total .amt small{font-size:13px;font-weight:600;color:var(--muted);margin-left:7px}
+.total .tax{font-size:12.5px;color:var(--muted2);margin-top:5px;font-variant-numeric:tabular-nums}
+.breakdown{margin-top:14px;border-top:1px solid var(--line);padding-top:12px;font-size:13px;display:none}
+.breakdown.show{display:block}
+.bd{display:flex;justify-content:space-between;gap:10px;padding:4px 0;color:var(--muted2)}
+.bd span:last-child{color:var(--text);font-variant-numeric:tabular-nums;text-align:right}
+.bd.strong{border-top:1px solid var(--line);margin-top:4px;padding-top:9px}
+.bd.strong span{color:var(--text);font-weight:700}
+.toggle{background:none;border:none;color:var(--accent);font-size:12.5px;font-weight:500;cursor:pointer;margin-top:10px;padding:0;font-family:inherit}
+/* アクション（コピー・フォーム遷移を常設） */
+.actions{display:flex;flex-direction:column;gap:10px;margin-top:16px}
+.btn{width:100%;text-align:center;padding:14px;border-radius:11px;font-weight:600;font-size:14px;cursor:pointer;border:none;text-decoration:none;display:inline-block;font-family:inherit;transition:background .18s,border-color .18s,color .18s}
+/* コピー（副導線・アウトライン → 完了時に緑フィル） */
+.btn.copy{position:relative;overflow:hidden;background:var(--panel);color:var(--text);border:1px solid var(--line2)}
+.btn.copy:hover{background:var(--panel2)}
+.btn.copy.done{color:#fff;border-color:var(--ok)}
+.btn.copy .copy-fill{position:absolute;inset:0;background:var(--ok);clip-path:inset(0 100% 0 0);animation:fillIn .32s cubic-bezier(.4,0,.2,1) forwards}
+.btn.copy .copy-inner{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:7px}
+.btn.copy .copy-inner svg{display:block}
+.btn.copy .copy-lab{animation:labelIn .3s .12s ease both}
+@keyframes fillIn{to{clip-path:inset(0 0 0 0)}}
+@keyframes drawCheck{to{stroke-dashoffset:0}}
+@keyframes labelIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+/* 問い合わせフォーム（主導線・アクセント） */
+.btn.cta{display:flex;align-items:center;justify-content:center;gap:8px;font-weight:700;font-size:14.5px;padding:15px;background:var(--accent);color:#fff;box-shadow:0 6px 20px rgba(120,112,102,0.24)}
+.btn.cta:hover{background:#6a6259}
+.btn.cta .arw{font-size:16px;line-height:1}
+.btn.cta.disabled{background:var(--panel2);color:var(--muted);box-shadow:none;cursor:not-allowed;pointer-events:none}
+/* 送付ヒント（区切り＋インフォアイコン） */
+.sharenote{margin-top:15px;padding-top:15px;border-top:1px solid var(--line);display:flex;gap:9px;align-items:flex-start}
+.sharenote svg{flex:none;margin-top:3px}
+.sharenote p{font-size:12px;color:var(--muted2);line-height:1.9;margin:0}
+.sharenote .em{color:var(--accent);font-weight:600}
+/* 進む後の完了状態（緑で強調） */
+.sharenote.done{border-top-color:rgba(63,122,92,0.35)}
+.sharenote.done p{color:var(--text)}
+.sharenote.done .em{color:var(--ok)}
+.sharenote .ico-info{display:block}
+.sharenote .ico-check{display:none}
+.sharenote.done .ico-info{display:none}
+.sharenote.done .ico-check{display:block}
+/* 免責（ページ下部・全幅フッター） */
+.pagenote{margin-top:28px;padding-top:20px;border-top:1px solid var(--line);display:flex;justify-content:flex-start}
+.pagenote p{max-width:640px;font-size:13px;color:var(--muted2);line-height:2;text-align:left;margin:0;padding-left:4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>ご依頼料金 見積りシミュレーター</h1>
+  <p id="subtitle"></p>
+</header>
+
+<div class="layout">
+<div class="left">
+
+<!-- 尺 -->
+<div class="card">
+  <h2><span class="n">1</span>動画の長さ（尺）</h2>
+  <div class="durrow">
+    <div class="durunit">
+      <div class="stepper">
+        <button id="minMinus">−</button>
+        <input id="minVal" value="4" readonly inputmode="numeric">
+        <button id="minPlus">＋</button>
+      </div>
+      <span class="u">分</span>
+    </div>
+    <div class="durunit">
+      <select id="secSel"></select>
+      <span class="u">秒</span>
+    </div>
+    <div class="durtotal" id="durTotal">4:00</div>
+  </div>
+  <div class="fieldnote" id="durNote"></div>
+</div>
+
+<!-- オプション（イラスト枚数を含む） -->
+<div class="card">
+  <h2><span class="n">2</span>制作内容</h2>
+  <div class="opt">
+    <div class="txt"><div class="lbl">イラストの枚数</div><div class="sub" id="illustSub"></div></div>
+    <div class="stepper">
+      <button id="ilMinus">−</button>
+      <input id="ilVal" value="1" readonly inputmode="numeric">
+      <button id="ilPlus">＋</button>
+    </div>
+  </div>
+  <div id="optList"></div>
+</div>
+
+<!-- 納期 -->
+<div class="card">
+  <h2><span class="n">3</span>納期</h2>
+  <div class="deadline" id="deadline"></div>
+</div>
+
+<!-- 割引 -->
+<div class="card" id="discCard">
+  <h2><span class="n">4</span>割引（該当する場合）</h2>
+  <div id="discList"></div>
+</div>
+
+</div>
+<!-- 結果（PC: 右カラムに追従／モバイル: 下部固定） -->
+<aside class="right">
+<div class="result">
+  <div class="total">
+    <div class="lab" id="totalLab">概算合計（税別）</div>
+    <div class="amt" id="total">¥0 〜 ¥0 <small>税別</small></div>
+    <div class="tax" id="taxline"></div>
+    <button class="toggle" id="bdToggle">内訳を見る ▾</button>
+    <div class="breakdown" id="breakdown"></div>
+    <div class="actions">
+      <a class="btn cta" id="formBtn" href="#">お問い合わせフォームへ進む</a>
+      <button class="btn copy" id="linkBtn">見積り内容をコピー</button>
+    </div>
+    <div class="sharenote" id="shareNote">
+      <svg class="ico-info" width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#9b9a97" stroke-width="1.6"></circle><path d="M12 11v5" stroke="#9b9a97" stroke-width="1.8" stroke-linecap="round"></path><circle cx="12" cy="7.8" r="1.05" fill="#9b9a97"></circle></svg>
+      <svg class="ico-check" width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#3f7a5c" stroke-width="1.6"></circle><path d="M8 12.2l2.6 2.6L16 9.2" stroke="#3f7a5c" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+      <p id="shareNoteText"></p>
+    </div>
+  </div>
+</div>
+</aside>
+</div>
+
+<footer class="pagenote"><p id="noteText"></p></footer>
+</div>
+
+<script src="./mvconfig.js"></script>
+<script>
+(function(){
+  var C = window.MVCONFIG;
+  if(!C){ document.getElementById('subtitle').textContent = '設定ファイル(mvconfig.js)が読み込めませんでした。'; return; }
+
+  var $ = function(s){ return document.querySelector(s); };
+  var yen = function(n){ return "¥" + Math.round(n).toLocaleString("ja-JP"); };
+  var fmt = function(sec){ var m=Math.floor(sec/60), s=sec%60; return m+":"+String(s).padStart(2,"0"); };
+  var esc = function(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
+
+  // オプション定義（順序保持）: 制作分の工数チェックボックス
+  var OPTS = [];
+  Object.keys(C.options||{}).forEach(function(id){
+    var o=C.options[id]; if(o.enabled===false) return;   // enabled:false は非表示
+    OPTS.push({id:id, label:o.label, add:o.add, sub:o.sub||'', flat:false});
+  });
+  // 商用は固定加算（係数の外）。enabled:false で非表示
+  if(C.commercial && C.commercial.enabled!==false){ OPTS.push({id:'commercial', label:C.commercial.label, add:C.commercial.add, sub:C.commercial.sub||'', flat:true}); }
+
+  // 有効な割引
+  var DISC = [];
+  Object.keys(C.discounts||{}).forEach(function(id){
+    var d=C.discounts[id]; if(d.enabled!==false){ DISC.push({id:id, label:d.label, note:d.note||'', rate:d.rate||0}); }
+  });
+
+  var state = { min:4, sec:0, illust:C.includedIllust||1, opts:{}, delivery:(C.delivery[0]||{}).id, disc:{} };
+  OPTS.forEach(function(o){ state.opts[o.id]=false; });
+  DISC.forEach(function(d){ state.disc[d.id]=false; });
+
+  var COPY_LABEL = C.copyLinkLabel || "結果リンクをコピー";
+
+  // ---- 税込／税別の主表示切替（mvconfig の priceIncludesTax）----
+  var TAX_INCL = !!C.priceIncludesTax;
+  var TAXT = 1 + (C.taxRate||0);
+  var MAIN_TAX_LABEL = TAX_INCL ? '税込' : '税別';   // 大きく出す方
+  var SUB_TAX_LABEL  = TAX_INCL ? '税別' : '税込';   // 小さく併記する方
+  function mainRange(r){ return TAX_INCL ? rangeStr(r.low*TAXT, r.high*TAXT) : rangeStr(r.low, r.high); }
+  function subRange(r){  return TAX_INCL ? rangeStr(r.low, r.high)          : rangeStr(r.low*TAXT, r.high*TAXT); }
+
+  // ---- レンジ表示 / 税別併記 の切替（mvconfig）----
+  var SHOW_RANGE  = C.showRange !== false;   // false でレンジ非表示（下端の1金額のみ）
+  var SHOW_SUBTAX = C.showSubTax !== false;  // false で税別の小さい併記を隠す（税込のみ表示）
+  // レンジ非表示のとき、表示・コピー用に上端を下端へ畳む（内部計算は不変）
+  function collapse(r){ if(!SHOW_RANGE){ r.high = r.low; r.highPre = r.lowPre; } return r; }
+
+  // ---- 静的文言 ----
+  $("#subtitle").textContent = C.subtitle||'';
+  $("#durNote").textContent = C.durationNote||'';
+  if(!C.durationNote){ $("#durNote").style.display='none'; }
+  $("#noteText").innerHTML = (C.disclaimer||'');
+  $("#illustSub").textContent = '';
+  if(!$("#illustSub").textContent){ $("#illustSub").remove(); }
+  $("#linkBtn").textContent = COPY_LABEL;
+
+  // ---- 問い合わせフォーム ボタン（押すと見積り内容を自動コピー＋フォームを開く）----
+  var formBtn = $("#formBtn");
+  var shareNoteText = $("#shareNoteText");
+  var flabel = C.formLabel || "見積り内容をコピーしてフォームへ";
+  formBtn.innerHTML = esc(flabel) + ' <span class="arw" aria-hidden="true">→</span>';
+  if(C.formUrl){
+    formBtn.href = C.formUrl;
+    if(C.formNewTab){ formBtn.target = "_blank"; formBtn.rel = "noopener noreferrer"; }
+    shareNoteText.textContent = C.formStepHint || 'このボタンを押すと見積り内容がコピーされ、フォームが開きます。フォームの「見積り結果」欄に貼り付けてください。';
+    // クリックで自動コピー → アンカーの既定動作でフォームを開く（preventDefault しない）
+    formBtn.addEventListener("click", function(){
+      copyToClipboard(copyText());
+      showGoConfirm();
+    });
+  } else {
+    // URL 未設定：無効化（グレーアウト）。mvconfig.js の formUrl を設定すると有効になります。
+    formBtn.classList.add("disabled");
+    formBtn.setAttribute("aria-disabled","true");
+    formBtn.removeAttribute("href");
+    shareNoteText.textContent = '「見積り内容をコピー」ボタンで内容をコピーし、お問い合わせフォームの「見積り結果」欄に貼り付けてください。';
+  }
+
+  // ---- 秒セレクト（00〜50・10刻み・6択）----
+  var secSel = $("#secSel");
+  for(var s=0;s<=50;s+=10){
+    var op=document.createElement('option'); op.value=s; op.textContent=String(s).padStart(2,'0'); secSel.appendChild(op);
+  }
+
+  // ---- オプション描画（sub が空なら .sub 要素を出さない＝中央ズレ防止）----
+  var optList = $("#optList");
+  OPTS.forEach(function(o){
+    var row=document.createElement('label'); row.className='opt';
+    var txt=document.createElement('div'); txt.className='txt';
+    var lbl=document.createElement('div'); lbl.className='lbl'; lbl.textContent=o.label; txt.appendChild(lbl);
+    if(o.sub){ var sub=document.createElement('div'); sub.className='sub'; sub.textContent=o.sub; txt.appendChild(sub); }
+    var cb=document.createElement('input'); cb.type='checkbox'; cb.dataset.opt=o.id;
+    row.appendChild(txt); row.appendChild(cb);
+    optList.appendChild(row);
+  });
+
+  // ---- 納期描画 ----
+  var dlEl=$("#deadline");
+  C.delivery.forEach(function(d){
+    var pct = d.rate>0 ? "+"+Math.round(d.rate*100)+"%" : "±0";
+    var el=document.createElement('label'); el.className='dl'; el.dataset.id=d.id;
+    el.innerHTML='<div class="t">'+d.name+'</div><div class="s">'+d.note+' / '+pct+'</div>';
+    dlEl.appendChild(el);
+  });
+
+  // ---- 割引描画（率は出さない：ラベル＋補足のみ）----
+  var discList=$("#discList");
+  if(DISC.length===0){ $("#discCard").style.display='none'; }
+  DISC.forEach(function(d){
+    var row=document.createElement('label'); row.className='opt';
+    var txt=document.createElement('div'); txt.className='txt';
+    var lbl=document.createElement('div'); lbl.className='lbl'; lbl.textContent=d.label; txt.appendChild(lbl);
+    if(d.note){ var sub=document.createElement('div'); sub.className='sub'; sub.textContent=d.note; txt.appendChild(sub); }
+    var sw=document.createElement('span'); sw.className='switch';
+    var cb=document.createElement('input'); cb.type='checkbox'; cb.dataset.disc=d.id;
+    var knob=document.createElement('span'); knob.className='knob';
+    sw.appendChild(cb); sw.appendChild(knob);
+    row.appendChild(txt); row.appendChild(sw);
+    discList.appendChild(row);
+  });
+
+  // ---- 計算 ----
+  function calc(){
+    var len = state.min*60 + state.sec;
+    var overSec = Math.max(0, len - (C.includedSec||0));
+    var unit = C.extraUnitSec||60;
+    var units = Math.ceil(overSec/unit);
+    var lenAdd = units * unit/60 * (C.perMin||0);
+    var illustAdd = Math.max(0, state.illust-(C.includedIllust||1)) * (C.perIllust||0);
+    var prodOpts=0, flat=0, optRows=[];
+    OPTS.forEach(function(o){
+      if(state.opts[o.id]){ if(o.flat){ flat+=o.add; } else { prodOpts+=o.add; } optRows.push(o); }
+    });
+    var prodBase = (C.baseMin||0) + lenAdd + illustAdd + prodOpts;
+    var dl = C.delivery.find(function(d){return d.id===state.delivery;}) || C.delivery[0];
+    var dlRate = dl.rate||0;
+    var band = C.bandMult||1;
+    var lowPre  = prodBase*(1+dlRate) + flat;
+    var highPre = prodBase*band*(1+dlRate) + flat;
+    var discSum=0, discRows=[];
+    DISC.forEach(function(d){ if(state.disc[d.id]){ discSum+=d.rate; discRows.push(d); } });
+    if(discSum>0.9) discSum=0.9;
+    var low = lowPre*(1-discSum);
+    var high = highPre*(1-discSum);
+    return { len:len, lenAdd:lenAdd, units:units, illustAdd:illustAdd, optRows:optRows, prodBase:prodBase,
+             dl:dl, dlRate:dlRate, flat:flat, lowPre:lowPre, highPre:highPre, discRows:discRows,
+             low:low, high:high };
+  }
+
+  function rangeStr(a,b){ return (Math.round(a)===Math.round(b)) ? yen(a) : yen(a)+" 〜 "+yen(b); }
+
+  function render(){
+    var r=collapse(calc());
+    $("#durTotal").textContent = fmt(r.len);
+    $("#totalLab").textContent = '概算合計（' + MAIN_TAX_LABEL + '）';
+    $("#total").textContent = mainRange(r);
+    if(SHOW_SUBTAX){
+      $("#taxline").style.display = '';
+      $("#taxline").textContent = SUB_TAX_LABEL + ' ' + subRange(r);
+    } else {
+      $("#taxline").style.display = 'none';
+      $("#taxline").textContent = '';
+    }
+
+    // 内訳
+    var rows=[];
+    rows.push(["基本料金", yen(C.baseMin||0)]);
+    if(r.lenAdd>0) rows.push(["尺追加（"+fmt(r.len)+"）", yen(r.lenAdd)]);
+    if(r.illustAdd>0) rows.push(["追加イラスト "+(state.illust-(C.includedIllust||1))+"枚", yen(r.illustAdd)]);
+    r.optRows.forEach(function(o){ if(!o.flat) rows.push([o.label, yen(o.add)]); });
+    if(r.dlRate>0) rows.push(["納期 "+r.dl.name+"（+"+Math.round(r.dlRate*100)+"%）", "制作分に加算"]);
+    r.optRows.forEach(function(o){ if(o.flat) rows.push([o.label, yen(o.add)]); });
+    rows.push(["小計（税別）", rangeStr(r.lowPre, r.highPre), true]);
+    r.discRows.forEach(function(d){ rows.push(["割引："+d.label, "適用"]); });
+    var taxRate = C.taxRate||0;
+    rows.push(["消費税（"+Math.round(taxRate*100)+"%）", rangeStr(r.low*taxRate, r.high*taxRate)]);
+    rows.push(["合計（税込）", rangeStr(r.low*TAXT, r.high*TAXT), true]);
+
+    $("#breakdown").innerHTML = rows.map(function(x){
+      return '<div class="bd'+(x[2]?' strong':'')+'"><span>'+x[0]+'</span><span>'+x[1]+'</span></div>';
+    }).join("");
+
+    updateLinks(r);
+  }
+
+  // ---- 結果リンク（ハッシュ）----
+  function buildHash(){
+    var checkedOpts = OPTS.filter(function(o){return state.opts[o.id];}).map(function(o){return o.id;}).join(",");
+    var checkedDisc = DISC.filter(function(d){return state.disc[d.id];}).map(function(d){return d.id;}).join(",");
+    var p = new URLSearchParams({ mn:state.min, sc:state.sec, il:state.illust, o:checkedOpts, dl:state.delivery, dc:checkedDisc });
+    return p.toString();
+  }
+  function shareUrl(){ return location.href.split("#")[0] + "#" + buildHash(); }
+
+  // ---- コピーする「サマリー＋リンク」テキストを組み立て ----
+  //  1行目=見出し / 概算・条件の要約（人が読む用） / 条件再現リンク（開けば全条件が復元される）
+  function buildSummary(r){
+    var lines = [];
+    lines.push('概算：' + mainRange(r) + '（' + MAIN_TAX_LABEL + '）');
+    lines.push('尺：' + fmt(r.len) + ' ／ イラスト：' + state.illust + '枚');
+    var optLabels = r.optRows.map(function(o){ return o.label; });
+    if(optLabels.length) lines.push('オプション：' + optLabels.join('、'));
+    lines.push('納期：' + r.dl.name);
+    if(r.discRows.length) lines.push('割引：' + r.discRows.map(function(d){ return d.label; }).join('、'));
+    return lines.join('\n');
+  }
+  function copyText(){
+    var r = collapse(calc());
+    var heading = C.formCopyHeading || '【MV制作 概算見積り】';
+    return heading + '\n'
+      + buildSummary(r) + '\n'
+      + '──────────\n'
+      + '▼条件再現リンク（開くと見積り条件が復元されます）\n'
+      + shareUrl();
+  }
+
+  function updateLinks(r){
+    // コピー完了アニメーション中はラベルを触らない
+    var lb=$("#linkBtn");
+    if(!lb.classList.contains('done')){ lb.textContent = COPY_LABEL; }
+  }
+
+  // ---- ハッシュ復元 ----
+  function restore(){
+    if(!location.hash) return;
+    var p=new URLSearchParams(location.hash.slice(1));
+    if(p.has("mn")) state.min=Math.max(0, parseInt(p.get("mn"))||0);
+    if(p.has("sc")){ var sc=parseInt(p.get("sc"))||0; sc=Math.round(sc/10)*10; state.sec=Math.min(50,Math.max(0,sc)); }
+    if(p.has("il")) state.illust=Math.max(C.includedIllust||1, parseInt(p.get("il"))||1);
+    if(p.has("o")){ var set=(p.get("o")||"").split(","); OPTS.forEach(function(o){ state.opts[o.id]=set.indexOf(o.id)>=0; }); }
+    if(p.has("dl") && C.delivery.some(function(d){return d.id===p.get("dl");})) state.delivery=p.get("dl");
+    if(p.has("dc")){ var ds=(p.get("dc")||"").split(","); DISC.forEach(function(d){ state.disc[d.id]=ds.indexOf(d.id)>=0; }); }
+  }
+  function syncUI(){
+    $("#minVal").value=state.min;
+    secSel.value=state.sec;
+    $("#ilVal").value=state.illust;
+    document.querySelectorAll('input[data-opt]').forEach(function(cb){ cb.checked=!!state.opts[cb.dataset.opt]; });
+    document.querySelectorAll('input[data-disc]').forEach(function(cb){ cb.checked=!!state.disc[cb.dataset.disc]; });
+    document.querySelectorAll(".dl").forEach(function(x){ x.classList.toggle("sel", x.dataset.id===state.delivery); });
+  }
+
+  // ---- コピーボタンの見た目 ----
+  var copyTimer=null;
+  function setCopyIdle(){ var b=$("#linkBtn"); b.classList.remove('done'); b.textContent=COPY_LABEL; }
+  function setCopyDone(){
+    var b=$("#linkBtn");
+    b.classList.add('done');
+    b.innerHTML = '<span class="copy-fill"></span>'
+      + '<span class="copy-inner">'
+      +   '<svg width="17" height="17" viewBox="0 0 24 24" fill="none">'
+      +     '<path d="M4 12.5l5 5 11-11" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="26" stroke-dashoffset="26" style="animation:drawCheck .34s .16s cubic-bezier(.65,0,.35,1) forwards"></path>'
+      +   '</svg>'
+      +   '<span class="copy-lab">コピーしました</span>'
+      + '</span>';
+    if(copyTimer) clearTimeout(copyTimer);
+    copyTimer=setTimeout(setCopyIdle, 2200);
+  }
+
+  // ---- イベント ----
+  $("#minMinus").addEventListener("click",function(){ state.min=Math.max(0,state.min-1); $("#minVal").value=state.min; render(); });
+  $("#minPlus").addEventListener("click",function(){ state.min=Math.min(15,state.min+1); $("#minVal").value=state.min; render(); });
+  secSel.addEventListener("change",function(e){ state.sec=parseInt(e.target.value)||0; render(); });
+  $("#ilMinus").addEventListener("click",function(){ state.illust=Math.max(C.includedIllust||1,state.illust-1); $("#ilVal").value=state.illust; render(); });
+  $("#ilPlus").addEventListener("click",function(){ state.illust=state.illust+1; $("#ilVal").value=state.illust; render(); });
+  optList.addEventListener("change",function(e){ if(e.target.dataset.opt){ state.opts[e.target.dataset.opt]=e.target.checked; render(); } });
+  discList.addEventListener("change",function(e){ if(e.target.dataset.disc){ state.disc[e.target.dataset.disc]=e.target.checked; render(); } });
+  dlEl.addEventListener("click",function(e){ var el=e.target.closest(".dl"); if(!el) return; state.delivery=el.dataset.id; document.querySelectorAll(".dl").forEach(function(x){x.classList.toggle("sel",x===el);}); render(); });
+  $("#bdToggle").addEventListener("click",function(){ var bd=$("#breakdown"); var open=bd.classList.toggle("show"); $("#bdToggle").textContent=open?"内訳を閉じる ▴":"内訳を見る ▾"; });
+  $("#linkBtn").addEventListener("click",function(){
+    copyToClipboard(copyText());
+    setCopyDone();
+  });
+  // クリップボードコピー（Clipboard API → 失敗時は textarea フォールバック）
+  function copyToClipboard(text){
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).catch(function(){ fallbackCopy(text); });
+    } else { fallbackCopy(text); }
+  }
+  function fallbackCopy(text){
+    try{ var ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); }catch(e){}
+  }
+  // 「進む」押下後：案内文をコピー完了メッセージに切り替える
+  function showGoConfirm(){
+    var note=$("#shareNote"); if(!note) return;
+    note.classList.add('done');
+    $("#shareNoteText").innerHTML = '<span class="em">見積り内容をコピーしました。</span>'
+      + (C.formDoneHint ? esc(C.formDoneHint).replace('見積り内容をコピーしました。','') : '開いたフォームの「見積り結果」欄に貼り付け（Cmd / Ctrl + V）してください。');
+  }
+
+  restore();
+  syncUI();
+  render();
+})();
+</script>
+</body>
+</html>
