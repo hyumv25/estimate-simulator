@@ -93,7 +93,7 @@ window.MVCONFIG = {
      formCopyHeading = コピーされる見積りテキストの見出し（1行目）。
      formStepHint    = ボタンの下に常時表示する案内（押す前）。
      formDoneHint    = ボタンを押した直後に表示する案内（コピー完了）。 */
-  formUrl:   '',
+  formUrl:   'https://x.gd/hyumv25',
   formLabel: '見積り内容をコピーしてフォームへ',
   formNewTab: true,
   formCopyHeading: '【MV制作 概算見積り】',
