@@ -40,14 +40,14 @@ window.MVCONFIG = {
 
   /* ───── イラスト枚数 ───── */
   includedIllust: 1,     // 基本料金に含まれる枚数
-  perIllust: 2000,       // ★仮 追加1枚あたり
+  perIllust: 3000,       // ★仮 追加1枚あたり
 
   /* ───── 工数チェックボックス ─────
      オンにすると add を制作分に加算します（納期係数・レンジ幅の対象）。
      sub     = 補助説明（プレースホルダー）。当面は空 ''。文言を入れると各行の下に表示されます。
      enabled = その項目の表示切替。書かない or true で表示、false で画面から隠す（一時的な非表示に便利）。 */
   options: {
-    diff: { enabled:true,  label:'イラスト 差分あり',  add:2000,  sub:'' },
+    diff: { enabled:true,  label:'イラスト 差分あり',  add:2000,  sub:'枚数や種類によって変動があるので、あくまでも概算です。' },
     sway: { enabled:true, label:'髪・衣装の揺れ',      add:5000, sub:'イラストのレイヤー・パーツ分けが必要になります。' },
     cg:   { enabled:false, label:'3D・CGの使用',        add:8000, sub:'' },
   },
