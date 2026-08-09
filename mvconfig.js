@@ -34,20 +34,20 @@ window.MVCONFIG = {
      extraUnitSec = 尺追加の課金単位（秒）。5 = 5秒ごと
      durationNote = 尺の下に出す注釈。空文字 '' で非表示 */
   includedSec: 240,
-  perMin: 5000,
+  perMin: 3000,
   extraUnitSec: 10,
   durationNote: '',
 
   /* ───── イラスト枚数 ───── */
   includedIllust: 1,     // 基本料金に含まれる枚数
-  perIllust: 3000,       // ★仮 追加1枚あたり
+  perIllust: 2000,       // ★仮 追加1枚あたり
 
   /* ───── 工数チェックボックス ─────
      オンにすると add を制作分に加算します（納期係数・レンジ幅の対象）。
      sub     = 補助説明（プレースホルダー）。当面は空 ''。文言を入れると各行の下に表示されます。
      enabled = その項目の表示切替。書かない or true で表示、false で画面から隠す（一時的な非表示に便利）。 */
   options: {
-    diff: { enabled:true,  label:'イラスト 差分あり',  add:2000,  sub:'枚数や種類によって変動があるので、あくまでも概算です。' },
+    diff: { enabled:true,  label:'イラスト 差分あり',  add:2000,  sub:'' },
     sway: { enabled:true, label:'髪・衣装の揺れ',      add:5000, sub:'イラストのレイヤー・パーツ分けが必要になります。' },
     cg:   { enabled:false, label:'3D・CGの使用',        add:8000, sub:'' },
   },
@@ -97,8 +97,8 @@ window.MVCONFIG = {
   formLabel: '見積り内容をコピーしてフォームへ',
   formNewTab: true,
   formCopyHeading: '【MV制作 概算見積り】',
-  formStepHint: 'このボタンを押すと見積り内容がコピーされ、フォームが開きます。フォームの「見積り結果」欄に貼り付けてください。',
-  formDoneHint: '見積り内容をコピーしました。開いたフォームの「見積り結果」欄に貼り付けてください。',
+  formStepHint: 'このボタンを押すと見積り内容がコピーされ、フォームが開きます。フォームの「見積り結果」欄に貼り付け（Cmd / Ctrl + V）してください。',
+  formDoneHint: '見積り内容をコピーしました。開いたフォームの「見積り結果」欄に貼り付け（Cmd / Ctrl + V）してください。',
 
   /* ───── 文言・連絡先 ───── */
   title:    '条件を選ぶだけで、概算金額がその場でわかります',
