@@ -244,9 +244,14 @@ select{background:var(--panel);color:var(--text);border:1px solid var(--line2);b
 
   var COPY_LABEL = C.copyLinkLabel || "結果リンクをコピー";
 
-  // ---- 税込／税別の主表示切替（mvconfig の priceIncludesTax）----
-  var TAX_INCL = !!C.priceIncludesTax;
-  var TAXT = 1 + (C.taxRate||0);
+  // ---- 税の扱い（mvconfig の taxMode）----
+  //  'included' … mvconfig の金額を「そのまま税込」として扱う。消費税を上乗せせず、
+  //               内訳にも消費税・小計（税別）の行を出さない。※インボイス未登録のあいだはこちら
+  //  'excluded' … mvconfig の金額は「税別」。消費税を上乗せして計算し、内訳にも消費税行を出す。
+  //               このとき priceIncludesTax / showSubTax の設定が有効になる。
+  var TAX_ON = (C.taxMode === 'excluded');
+  var TAXT = TAX_ON ? 1 + (C.taxRate||0) : 1;
+  var TAX_INCL = TAX_ON ? !!C.priceIncludesTax : true;  // 税込モードでは常に税込表示
   var MAIN_TAX_LABEL = TAX_INCL ? '税込' : '税別';   // 大きく出す方
   var SUB_TAX_LABEL  = TAX_INCL ? '税別' : '税込';   // 小さく併記する方
   function mainRange(r){ return TAX_INCL ? rangeStr(r.low*TAXT, r.high*TAXT) : rangeStr(r.low, r.high); }
@@ -254,7 +259,8 @@ select{background:var(--panel);color:var(--text);border:1px solid var(--line2);b
 
   // ---- レンジ表示 / 税別併記 の切替（mvconfig）----
   var SHOW_RANGE  = C.showRange !== false;   // false でレンジ非表示（下端の1金額のみ）
-  var SHOW_SUBTAX = C.showSubTax !== false;  // false で税別の小さい併記を隠す（税込のみ表示）
+  // 税別併記は「税別モード」のときだけ意味を持つ（税込モードでは同額なので常に隠す）
+  var SHOW_SUBTAX = TAX_ON && (C.showSubTax !== false);
   // レンジ非表示のとき、表示・コピー用に上端を下端へ畳む（内部計算は不変）
   function collapse(r){ if(!SHOW_RANGE){ r.high = r.low; r.highPre = r.lowPre; } return r; }
 
@@ -383,10 +389,18 @@ select{background:var(--panel);color:var(--text);border:1px solid var(--line2);b
     r.optRows.forEach(function(o){ if(!o.flat) rows.push([o.label, yen(o.add)]); });
     if(r.dlRate>0) rows.push(["納期 "+r.dl.name+"（+"+Math.round(r.dlRate*100)+"%）", "制作分に加算"]);
     r.optRows.forEach(function(o){ if(o.flat) rows.push([o.label, yen(o.add)]); });
-    rows.push(["小計（税別）", rangeStr(r.lowPre, r.highPre), true]);
-    r.discRows.forEach(function(d){ rows.push(["割引："+d.label, "適用"]); });
-    var taxRate = C.taxRate||0;
-    rows.push(["消費税（"+Math.round(taxRate*100)+"%）", rangeStr(r.low*taxRate, r.high*taxRate)]);
+    if(TAX_ON){
+      rows.push(["小計（税別）", rangeStr(r.lowPre, r.highPre), true]);
+      r.discRows.forEach(function(d){ rows.push(["割引："+d.label, "適用"]); });
+      var taxRate = C.taxRate||0;
+      rows.push(["消費税（"+Math.round(taxRate*100)+"%）", rangeStr(r.low*taxRate, r.high*taxRate)]);
+    } else {
+      // 税込モード：消費税の行は出さない。小計は割引があるときだけ（割引前の額を示すため）出す。
+      if(r.discRows.length){
+        rows.push(["小計", rangeStr(r.lowPre, r.highPre), true]);
+        r.discRows.forEach(function(d){ rows.push(["割引："+d.label, "適用"]); });
+      }
+    }
     rows.push(["合計（税込）", rangeStr(r.low*TAXT, r.high*TAXT), true]);
 
     $("#breakdown").innerHTML = rows.map(function(x){
