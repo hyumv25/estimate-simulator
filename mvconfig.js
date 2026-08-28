@@ -59,7 +59,7 @@ window.MVCONFIG = {
      enabled = その項目の表示切替。書かない or true で表示、false で画面から隠す（一時的な非表示に便利）。 */
   options: {
     diff: { enabled:true,  label:'イラスト 差分あり',  add:2000,  sub:'' },
-    sway: { enabled:true, label:'髪・衣装の揺れ',      add:5000, sub:'イラストのレイヤー・パーツ分けが必要になります。' },
+    sway: { enabled:true, label:'髪・衣装の揺れ',      add:3000, sub:'イラストのレイヤー・パーツ分けが必要になります。' },
     cg:   { enabled:false, label:'3D・CGの使用',        add:8000, sub:'' },
   },
 
@@ -86,15 +86,11 @@ window.MVCONFIG = {
 
   /* ───── 割引 ─────
      enabled : false でその割引を画面から隠せます
-     rate    : 割引率（小計に対して）。0.05 = 5%引き。
-     amount  : 定額割引（円）。1500 と書けば一律 -1,500円。
+     rate    : 割引率（税別小計に対して）。※この率は依頼者の画面には表示しません（内部計算のみ）
      note    : 適用条件の補足テキスト（これは表示されます）
-     ※ rate と amount はどちらか一方だけ書けばOK（両方書くと「割合を引いてから定額を引く」）。
-       書かなかった方は 0 として扱われます。
-     ※割引額・割引率は依頼者の画面には表示しません（合計金額に反映されるだけ・内部計算）。
-     ※複数選んだ場合は合算されます（例 -1,500円 + 5%引き）。 */
+     ※複数選んだ場合は合算（例 10% + 5% = 15%引き）されます。 */
   discounts: {
-    repeat:   { enabled:true, label:'リピーター様 割引', note:'前回のご依頼から3ヶ月以内', amount:1500 },
+    repeat:   { enabled:true, label:'リピーター様 割引', note:'前回のご依頼から3ヶ月以内', rate:0.10 },
     referral: { enabled:true, label:'ご紹介割引',       note:'紹介者・被紹介者のどちらも対象', rate:0.05 },
   },
 
