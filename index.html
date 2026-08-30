@@ -235,7 +235,7 @@ select{background:var(--panel);color:var(--text);border:1px solid var(--line2);b
   // 有効な割引
   var DISC = [];
   Object.keys(C.discounts||{}).forEach(function(id){
-    var d=C.discounts[id]; if(d.enabled!==false){ DISC.push({id:id, label:d.label, note:d.note||'', rate:d.rate||0}); }
+    var d=C.discounts[id]; if(d.enabled!==false){ DISC.push({id:id, label:d.label, note:d.note||'', rate:d.rate||0, amount:d.amount||0}); }
   });
 
   var state = { min:4, sec:0, illust:C.includedIllust||1, opts:{}, delivery:(C.delivery[0]||{}).id, disc:{} };
@@ -356,11 +356,12 @@ select{background:var(--panel);color:var(--text);border:1px solid var(--line2);b
     var band = C.bandMult||1;
     var lowPre  = prodBase*(1+dlRate) + flat;
     var highPre = prodBase*band*(1+dlRate) + flat;
-    var discSum=0, discRows=[];
-    DISC.forEach(function(d){ if(state.disc[d.id]){ discSum+=d.rate; discRows.push(d); } });
+    // 割引：rate（割合）と amount（定額）の両方に対応。割合を先に引き、そのあと定額を引く。
+    var discSum=0, discFlat=0, discRows=[];
+    DISC.forEach(function(d){ if(state.disc[d.id]){ discSum+=d.rate; discFlat+=d.amount; discRows.push(d); } });
     if(discSum>0.9) discSum=0.9;
-    var low = lowPre*(1-discSum);
-    var high = highPre*(1-discSum);
+    var low  = Math.max(0, lowPre*(1-discSum)  - discFlat);
+    var high = Math.max(0, highPre*(1-discSum) - discFlat);
     return { len:len, lenAdd:lenAdd, units:units, illustAdd:illustAdd, optRows:optRows, prodBase:prodBase,
              dl:dl, dlRate:dlRate, flat:flat, lowPre:lowPre, highPre:highPre, discRows:discRows,
              low:low, high:high };
