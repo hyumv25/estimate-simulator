@@ -58,7 +58,7 @@ window.MVCONFIG = {
      sub     = 補助説明（プレースホルダー）。当面は空 ''。文言を入れると各行の下に表示されます。
      enabled = その項目の表示切替。書かない or true で表示、false で画面から隠す（一時的な非表示に便利）。 */
   options: {
-    diff: { enabled:true,  label:'イラスト 差分あり',  add:2000,  sub:'' },
+    diff: { enabled:true,  label:'イラスト 差分あり',  add:2000,  sub:'ご依頼いただいている平均枚数からの概算です。<br>実際のお見積りの際は金額が変動いたしますので、ご了承ください。' },
     sway: { enabled:true, label:'髪・衣装の揺れ',      add:3000, sub:'イラストのレイヤー・パーツ分けが必要になります。' },
     cg:   { enabled:false, label:'3D・CGの使用',        add:8000, sub:'' },
   },
